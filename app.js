@@ -3,6 +3,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
+const _ = require("lodash");
 
 let posts = [];
 
@@ -21,7 +22,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 app.get("/", function (req, res) {
-  res.render("home", { homeText: homeStartingContent });
+  res.render("home", { homeText: homeStartingContent, posts: posts });
 });
 
 app.get("/contact", function (req, res) {
@@ -33,8 +34,20 @@ app.get("/about", function (req, res) {
 });
 
 app.get("/compose", function (req, res) {
-  res.render("compose");
+  res.render("compose", { posts: posts });
 });
+
+app.get("/posts/:title", function (req, res) {
+  const title = req.params.title;
+  posts.forEach(function (post) {
+    if (_.lowerCase(post.title) == _.lowerCase(title)) {
+      res.render("post", { postTitle: post.title, postContent: post.content });
+    } else {
+      console.log("Post not found :(");
+    }
+  });
+});
+
 app.listen(3000, function () {
   console.log("Server started on port 3000");
 });
@@ -42,11 +55,10 @@ app.listen(3000, function () {
 app.post("/compose", function (req, res) {
   const title = req.body.postTitle;
   const content = req.body.postText;
-  var postContent = {
+  let postContent = {
     title: title,
     content: content,
   };
   posts.push(postContent);
-  console.log(posts);
   res.redirect("/");
 });
